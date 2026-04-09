@@ -2,10 +2,20 @@
 
 Complete step-by-step setup for Windows development, targeting Windows, Mac, and Steam Deck (Linux).
 
+**Engine:** **Unity 6 LTS** (version line **6000.x**, e.g. `6000.3.xf1`). This guide matches the Unity 6 editor and Hub — not Unity 2022/2023.
+
 **Assumed knowledge:** Comfortable with Git, GitHub, command line, and installing software.  
 **Not assumed:** Any Unity experience whatsoever.
 
 **Estimated time: 2-3 hours** (mostly downloads)
+
+### If you already know older Unity
+
+| Older habit | In Unity 6 |
+|-------------|------------|
+| **File → Build Settings** | **File → Build Profiles** (scenes: **Platforms → Scene List**) |
+| One URP asset in Project for everything | **Pipeline asset** (`PC_RPAsset`, …) for MSAA/HDR; **`UniversalRenderPipelineGlobalSettings`** opens **Project Settings → Graphics** |
+| Flat Project Settings lists | Many sections use **foldouts** — expand **Other Settings**, **Rendering**, etc. |
 
 ---
 
@@ -48,19 +58,23 @@ Unity is free for personal/indie use under $100k revenue.
 
 1. In Unity Hub, click **Installs** (left sidebar) → **Install Editor**
 2. Select **Unity 6** with the **LTS** badge (version `6000.x.x LTS`)
-3. On the modules screen, check these — everything else can stay unchecked:
+3. On the **modules** screen, enable these — names can vary slightly by Hub version; match the **platform**, not every sub-checkbox:
 
-| Module | Why |
-|--------|-----|
-| ✅ Microsoft Visual Studio Community 2022 | Your IDE — skip if already installed |
-| ✅ Windows Build Support (IL2CPP) | Build for Windows |
-| ✅ Mac Build Support (Mono) | Build for Mac |
-| ✅ Linux Build Support (IL2CPP) | Build for Steam Deck |
-| ✅ Documentation | Offline docs |
+| Module (as shown in Hub) | Why |
+|--------------------------|-----|
+| ✅ **Microsoft Visual Studio Community 2022** (or your IDE) | C# editing — skip if already installed |
+| ✅ **Windows Build Support** — include **IL2CPP** if offered as a sub-option | Windows players + IL2CPP scripting backend |
+| ✅ **Mac Build Support** — install the option Hub offers (**IL2CPP** and/or **Mono**) | Cross-compile Mac builds from Windows |
+| ✅ **Linux Build Support (IL2CPP)** | Linux / Steam Deck-style targets |
+| ✅ **Documentation** | Offline manual |
 
 4. Click **Install** — 20-60 minutes depending on your internet
 
-> **IL2CPP vs Mono:** IL2CPP compiles C# to C++ before building — faster runtime performance. Mono is an interpreter — faster to build, slower to run. We use IL2CPP for shipping platforms.
+   To add modules later: **Unity Hub → Installs** → **⋮** (or gear) beside your Unity 6 editor → **Add modules**.
+
+5. **IL2CPP and Visual Studio (Windows):** IL2CPP needs a C++ toolchain. If builds fail with missing compiler errors, open **Visual Studio Installer** → modify your VS install → enable workload **Desktop development with C++** (includes MSVC and Windows SDK).
+
+> **IL2CPP vs Mono:** IL2CPP compiles C# to C++ before building — faster runtime performance. Mono is an interpreter — faster to build, slower to run. This guide standardizes on **IL2CPP** in Player Settings.
 
 ---
 
@@ -73,15 +87,15 @@ Unity is free for personal/indie use under $100k revenue.
 
    > **What is a template?** A pre-configured Unity project. The template we want sets up URP (our render pipeline) automatically so we don't have to wire it up manually.
 
-3. Select **Universal 3D** — this is the URP template. Do NOT pick "3D (Built-in Render Pipeline)" — that's the legacy renderer.
+3. Select **Universal 3D** — this is the URP template for Unity 6. (Hub wording can vary; avoid **3D (Built-in Render Pipeline)** or any template that says **Built-in** only — that is the legacy renderer.)
 4. Set:
    - **Project name:** `ChibiValley`
    - **Location:** `C:\Users\Andrew\Documents\Github\game`
-5. Click **Create project** — Unity will open for the first time, taking 2-5 minutes to compile shaders
+5. Click **Create project** — Unity opens for the first time; first-time shader compile often takes **2–5 minutes**
 
 ### Step 3.2 — Understanding the Unity Editor Layout
 
-When Unity opens, you're looking at the Editor. Every panel has a name — you'll hear these terms constantly:
+When Unity opens, you're looking at the **Editor**. Unity 6 uses the same overall layout as recent versions; panel names below are what docs and tutorials use:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -106,7 +120,7 @@ When Unity opens, you're looking at the Editor. Every panel has a name — you'l
 │              │  Press ▶ Play to          │                  │
 │              │  run the game here.       │                  │
 ├──────────────┴───────────────────────────┴──────────────────┤
-│  Project Panel                │  Console                    │
+│  Project window               │  Console                    │
 │                               │                             │
 │  Your file system.            │  Errors, warnings, and      │
 │  Everything under Assets/     │  Debug.Log() output.        │
@@ -121,42 +135,47 @@ When Unity opens, you're looking at the Editor. Every panel has a name — you'l
 ### Step 3.3 — Verify URP Is Active
 
 1. In the menu bar: **Edit → Project Settings**
-   > Project Settings is like your app's config file — one window for all engine-level settings.
+   > Project Settings is your project’s engine-level config. Unity 6 uses a **search box** at the top — you can type `graphics` or `urp` to jump.
 
 2. Click **Graphics** in the left list
-3. Look for **Scriptable Render Pipeline Settings** — it should show a URP Asset (not "None")
-4. If it says "None", something went wrong — delete the project and recreate it with the Universal 3D template
-5. Close Project Settings (X on the window, not the whole editor)
+3. Under **Scriptable Render Pipeline Settings**, the asset field should reference a URP pipeline asset (e.g. **`PC_RPAsset`**) — not **None**
+4. Optionally expand **Pipeline Specific Settings** → **URP** — that is the in-editor home for **URP Global Settings** (linked to `UniversalRenderPipelineGlobalSettings`). Seeing this section means URP is wired for Unity 6.
+5. If the pipeline slot is **None**, recreate the project with the **Universal 3D** template
+6. Close Project Settings (**X** on that window, not the whole editor)
 
 ---
 
 ## Part 4: Configure Project Settings
 
-All of these live in **Edit → Project Settings**. Open it and leave it open for this whole section.
+These live in **Edit → Project Settings**. Open it once and use the left categories (and the **search** field if you cannot find a name).
+
+Unity 6 often nests options in **foldouts** — if you do not see a property, expand **Settings for …**, **Other Settings**, **Resolution and Presentation**, etc.
 
 ### Step 4.1 — Player Settings
 
-Click **Player** in the left list:
+Click **Player** in the left list. Use the **platform icons** at the top (Windows, Mac, Linux, …) when a setting is per-platform — the guide below calls out where that matters.
+
+**Identification** (usually shared):
 
 - **Company Name:** your name
 - **Product Name:** `ChibiValley`
 - **Version:** `0.1.0`
 
-Scroll down to **Other Settings:**
+Expand **Other Settings** (and scroll within it):
 
-- **Color Space:** change from Gamma to **Linear**
-  > Unity will warn you this is expensive to switch later — click "Switch to Linear". Linear color space means lighting math is physically accurate. Gamma is legacy.
-- **API Compatibility Level:** `.NET Standard 2.1`
-- **Scripting Backend:** `IL2CPP`
+- **Color Space:** **Linear** (if it still says Gamma, switch it)
+  > Unity warns that switching later is expensive — confirm **Switch to Linear**. Linear color space keeps lighting math consistent; Gamma is legacy.
+- **API Compatibility Level:** `.NET Standard 2.1` (or the closest option Hub offers)
+- **Scripting Backend:** **IL2CPP** (per platform where the choice exists — set for **Windows**, **Mac**, and **Linux** standalone)
 
 ### Step 4.2 — Set Your Code Editor
 
-**Edit → Preferences** (not Project Settings — this one is per-machine, not per-project):
+**Edit → Preferences** (Windows) — per-machine, not stored in the project. On macOS the menu is **Unity → Settings…** or **Unity → Preferences**.
 
-1. Click **External Tools**
-2. **External Script Editor:** Visual Studio 2022
+1. Open **External Tools**
+2. **External Script Editor:** **Visual Studio 2022** (or **Visual Studio Code** if you use that — point to the executable)
 3. Click **Regenerate project files**
-   > This creates `.csproj` files so Visual Studio understands Unity's structure and gives you autocomplete for Unity APIs.
+   > Regenerates `.csproj` / solution files so your IDE gets Unity API completions. Your `.gitignore` may exclude `*.csproj`; that is normal — Unity recreates them locally.
 
 ### Step 4.3 — Configure the URP Asset
 
@@ -169,7 +188,7 @@ Unity 6 splits URP into two ideas — easy to mix up:
 
 **Open the pipeline asset (MSAA + HDR):**
 
-1. In the **Project** panel: `Assets → Settings`
+1. In the **Project** window: `Assets → Settings`
 2. Click **`PC_RPAsset`** (desktop / default quality). *Do not use `UniversalRenderPipelineGlobalSettings` for these toggles.*
 3. In the **Inspector**, expand **Quality** (section headers group the fields). Set:
    - **Anti Aliasing (MSAA):** `Disabled` — MSAA smooths edges, which fights the pixelated PS1 look
@@ -182,20 +201,21 @@ Unity 6 splits URP into two ideas — easy to mix up:
 ### Step 4.4 — Disable Texture Smoothing Globally
 
 1. **Edit → Project Settings → Quality**
-2. Set **Anisotropic Textures:** `Disabled`
-   > Anisotropic filtering makes textures look smoother at angles. We want them to look crunchy and pixelated — disable it.
+2. At the top you’ll see **named quality levels** (e.g. **PC**, **Mobile**). **Select each level you plan to ship with** (at minimum the default / active one).
+3. In that level’s settings, set **Anisotropic Textures** to **Disabled**
+   > Anisotropic filtering makes textures look smoother at glancing angles. For a crunchy pixel look, turn it off on every quality tier you use.
 
 ---
 
 ## Part 5: Set Up Folder Structure
 
-In Unity, **everything your game uses must live inside the `Assets/` folder** — Unity doesn't know about files outside it. The Project panel IS your `Assets/` folder.
+In Unity, **everything your game uses must live inside the `Assets/` folder** — Unity doesn't know about files outside it. The **Project** window is your live view of `Assets/`.
 
 > **Why the underscore on `_Project`?** Unity sorts folders alphabetically. The underscore forces `_Project` to the top, keeping your work above imported third-party packages which clutter the view.
 
 ### Step 5.1 — Create Folders
 
-In the **Project panel**, right-click on **Assets** → **Create → Folder**. Create this structure:
+In the **Project** window, right-click **Assets** → **Create → Folder**. Create this structure:
 
 ```
 Assets/
@@ -259,11 +279,11 @@ Assets/
 
 ### Step 5.2 — Move the Default Scene
 
-Unity created a scene called `SampleScene`. A **Scene** in Unity is like a level or screen — it contains all the GameObjects for that area. The Main Menu is a scene, the Farm is a scene, each town zone is a scene.
+Unity created a scene called `SampleScene`. A **Scene** is a level or screen — it holds the GameObjects for that area (main menu, farm zone, etc.).
 
-1. In the Project panel, find `Assets → Scenes → SampleScene`
-2. Drag it into `Assets → _Project → Scenes → Farm`
-3. Right-click it → **Rename** → `Farm`
+1. In the **Project** window, find **`Assets/Scenes/SampleScene`** (Universal 3D template path; if yours differs, search the Project search bar for `SampleScene`)
+2. Drag the asset into **`Assets/_Project/Scenes/Farm`** (create the `Farm` folder if you have not yet)
+3. Right-click the scene asset → **Rename** → `Farm`
 
 ---
 
@@ -288,6 +308,10 @@ Create `C:\Users\Andrew\Documents\Github\game\ChibiValley\.gitignore`:
 [Bb]uilds/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
+
+# Unity 6 / editor captures (optional but common)
+[Rr]ecordings/
+[Mm]emoryCaptures/
 
 # Crash reports
 sysinfo.txt
@@ -364,7 +388,7 @@ git add .
 git commit -m "Initial project setup — Unity 6 URP, ChibiValley"
 
 # Create repo on GitHub (private), then:
-git remote add origin https://github.com/YOUR_USERNAME/ChibiValley.git
+git remote add origin https://github.com/andyruwruw/chibi-valley.git
 git branch -M main
 git push -u origin main
 ```
@@ -373,27 +397,36 @@ git push -u origin main
 
 ## Part 7: Configure Build Targets
 
-### Open Build Settings
+### Open Build Profiles
 
-**File → Build Settings**
+**File → Build Profiles**
 
 > **What is a build?** Compiling your Unity project into a standalone executable for a target platform. You develop on Windows but can output binaries for Mac and Linux too (cross-compilation).
 
+In Unity 6, **File → Build Settings** was removed. **Build Profiles** is the replacement: it manages **platforms**, **scene lists**, **Player Settings overrides**, and **Build / Build and Run**.
+
+The left side has **Platforms** (shared defaults per installed platform) and optional **custom Build Profile** assets for specialized configs — follow **Platforms** until you need extras.
+
 ### Add Your Scene
 
-1. Click **Add Open Scenes** — `Farm` should appear in the list with a checkmark
-2. Every scene you want accessible in the game must be listed here
+1. **File → Build Profiles**
+2. Select **Platforms** in the left sidebar
+3. Open **Scene List** (Unity’s manual path: **File → Build Profiles → Platforms → Scene List**)
+4. Click **Add Open Scenes** (with `Farm` open) — `Farm` should appear with its checkbox enabled
+5. Uncheck a scene to exclude it from builds without deleting it from the list; drag rows to change **load order**
 
 ### Windows Build
 
-`PC, Mac & Linux Standalone` is already selected in the Platform list:
-- **Target Platform:** Windows
-- **Architecture:** x86_64
-- Click **Switch Platform** if it isn't already active (Unity reimports assets for the target — takes a few minutes)
+Still under **Platforms**, select **PC, Mac & Linux Standalone** → **Windows** (exact labels depend on Hub modules; you want the **Windows** standalone target):
+
+- Set **Target Platform** / **Architecture** to **Windows** and **64-bit** (often shown as **x86_64** or **Intel 64-bit**)
+- Use **Switch Platform** if Unity shows it and the active target is wrong — expect a **reimport** (can take minutes the first time)
+
+Use **Build** or **Build and Run** from the same window when you are ready (see Part 10).
 
 ### Player Settings Per Platform
 
-**Edit → Project Settings → Player**, then use the platform tabs at the top (little icons for each OS):
+**Edit → Project Settings → Player** → use the **platform / OS icons** along the top to switch **Windows**, **Mac**, and **Linux** standalone. Screen size and fullscreen options sit under **Resolution and Presentation** (expand the foldout if you do not see them).
 
 **All platforms:**
 ```
@@ -418,6 +451,8 @@ Fullscreen Mode:        Windowed
 Resizable Window:       ✅
 ```
 
+> Unity 6 sometimes labels this **Full Screen Mode** instead of **Fullscreen Mode** — same setting.
+
 > Mac builds cross-compiled from Windows work for testing but **cannot be code-signed on Windows**. For App Store distribution or Gatekeeper compliance you'll need a Mac or a GitHub Actions Mac runner. Not a problem until you're near release.
 
 **Linux (Steam Deck):**
@@ -434,26 +469,30 @@ Resizable Window:       ✅
 
 ## Part 8: Install Core Packages
 
-Unity has a package manager for first-party and community packages — like npm but for engine features.
+Unity’s **Package Manager** adds first-party and third-party engine features (like npm for the editor).
 
 ### Open Package Manager
 
 **Window → Package Manager**
 
-> You'll see two registries: **Unity Registry** (official packages) and **In Project** (what's installed). Switch between them using the dropdown at the top left.
+Use the **dropdown** at the top left:
+
+- **Unity Registry** — official Unity packages
+- **My Assets** — Asset Store purchases
+- **In Project** — everything already installed
 
 ### Install via Package Manager (Unity Registry)
 
-Search for each of these, click it, then click **Install**:
+Set the dropdown to **Unity Registry**. Search each name, select the package, then **Install**:
 
 | Package | Purpose |
 |---------|---------|
-| **Input System** | Modern input handling — keyboard, controller, Steam Deck gamepad |
-| **ProBuilder** | Build geometry directly in the Unity editor |
-| **Animation Rigging** | Procedural animation constraints for animals |
-| **Cinemachine** | Advanced camera system |
+| **Input System** | Modern input — keyboard, gamepad, Steam Deck controls |
+| **ProBuilder** | Greybox / in-editor geometry |
+| **Animation Rigging** | Procedural animation constraints |
+| **Cinemachine** | Advanced cameras |
 
-> When you install **Input System**, Unity will show a dialog: *"Do you want to enable the new input system?"* — click **Yes**. Unity restarts. After restart: **Edit → Project Settings → Player → Other Settings → Active Input Handling** → set to **Both**.
+**Input System:** A dialog may ask to enable the new stack — accept and let Unity **restart** if it offers. Afterward, confirm **Edit → Project Settings → Player → Other Settings → Active Input Handling** is **Input System Package (New)** or **Both** (use **Both** if you still need legacy `Input` during migration).
 
 ### Install Yarn Spinner (via Git URL)
 
@@ -480,13 +519,15 @@ FMOD is a separate application that integrates with Unity. It handles all audio 
 
 ### Step 9.2 — Import FMOD into Unity
 
-1. Unzip the FMOD Unity Integration
-2. Inside you'll find a `.unitypackage` file
-3. In Unity: **Assets → Import Package → Custom Package** → select the `.unitypackage`
+1. Unzip the FMOD Unity Integration download
+2. Locate the `.unitypackage` file inside
+3. Either:
+   - **Assets → Import Package → Custom Package…** and choose that file, or  
+   - **Double-click** the `.unitypackage` file in File Explorer (Windows) — it should open the import dialog in the running Unity editor
 
-   > **What is a `.unitypackage`?** A zip of Unity assets and scripts — like an npm tarball. Double-clicking one in Explorer will open it in Unity automatically once Unity is installed.
+   > **`.unitypackage`** = a Unity asset bundle (prefabs, scripts, plugins). Import pulls copies into your `Assets/` tree.
 
-4. A window appears listing everything in the package — click **Import All**
+4. In the import window, click **Import All**
 5. A FMOD setup wizard will appear in Unity — follow it:
    - Create a new FMOD Studio project when prompted, name it `ChibiValley`
    - Link it to the FMOD Studio app you installed
@@ -498,19 +539,19 @@ FMOD is a separate application that integrates with Unity. It handles all audio 
 
 ### Checklist
 
-- [ ] Unity 6 LTS opens without red errors in the Console panel
-- [ ] **Edit → Project Settings → Graphics** shows a URP asset (not "None")
-- [ ] **Edit → Project Settings → Player → Other Settings → Color Space** shows "Linear"
-- [ ] Double-clicking a `.cs` script in the Project panel opens Visual Studio 2022
-- [ ] `git lfs ls-files` runs without error in the project directory
+- [ ] Unity 6 LTS (`6000.x`) opens without red errors in the **Console**
+- [ ] **Edit → Project Settings → Graphics → Scriptable Render Pipeline Settings** references a URP asset (e.g. `PC_RPAsset`), not **None**
+- [ ] **Edit → Project Settings → Player → Other Settings → Color Space** is **Linear**
+- [ ] Double-clicking a `.cs` script in the **Project** window opens your chosen IDE (Visual Studio / VS Code)
+- [ ] `git lfs ls-files` runs without error in the project directory (`ChibiValley`)
 - [ ] GitHub repo exists and has your initial commit
-- [ ] **File → Build Settings** shows Windows, and Linux/Mac are available without errors
-- [ ] **Window → Package Manager → In Project** shows: Input System, ProBuilder, Animation Rigging, Cinemachine, Yarn Spinner
-- [ ] FMOD menu appears in Unity's menu bar
+- [ ] **File → Build Profiles → Platforms** shows Windows and Mac/Linux standalone without module errors
+- [ ] **Window → Package Manager → In Project** lists: Input System, ProBuilder, Animation Rigging, Cinemachine, Yarn Spinner (after Part 8)
+- [ ] **FMOD** menu appears in the menu bar (after Part 9)
 
 ### Test Build
 
-1. **File → Build Settings → Build** (not Build and Run)
+1. **File → Build Profiles** → **Platforms** → **PC, Mac & Linux Standalone** → **Windows** → **Build** (avoid **Build and Run** until you want Unity to launch the exe)
 2. Choose a folder outside the project — e.g. `C:\Builds\ChibiValley\Windows\`
 3. Wait — a `.exe` will appear when done
 4. Run it — you should see Unity's default URP grey scene with a camera
@@ -528,6 +569,18 @@ git push
 
 ---
 
+## Troubleshooting (Unity 6)
+
+| Symptom | What to check |
+|--------|----------------|
+| No **File → Build Settings** | Normal — use **File → Build Profiles** and **Platforms → Scene List**. |
+| **`UniversalRenderPipelineGlobalSettings`** opens **Graphics** only | Expected. MSAA / HDR are on **`PC_RPAsset`** (Project → `Assets/Settings`), not on global settings. |
+| IL2CPP build fails, “missing compiler” / MSVC | Install **Visual Studio 2022** with **Desktop development with C++**; confirm **Windows Build Support (IL2CPP)** in Hub. |
+| Input does nothing after Input System | **Player → Other Settings → Active Input Handling** = **Both** or **New**; scene needs **Player Input** or event wiring. |
+| Package install errors / Git URL | Unity needs network access; for Yarn Spinner, confirm the `#current` branch still exists or use the URL from [Yarn Spinner docs](https://docs.yarnspinner.dev/). |
+
+---
+
 ## What's Next
 
 1. **Buy and import PS1 shader pack** from Unity Asset Store — apply globally before any art work
@@ -538,4 +591,4 @@ git push
 
 ---
 
-*Last updated: 2026-04-09*
+*Guide version: Unity 6 LTS (`6000.x`). Last updated: 2026-04-09.*

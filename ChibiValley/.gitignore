@@ -7,6 +7,10 @@
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
 
+# Editor captures (Unity 6)
+[Rr]ecordings/
+[Mm]emoryCaptures/
+
 # Crash reports
 sysinfo.txt
 
