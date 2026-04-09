@@ -1,0 +1,32 @@
+# Unity generated — never commit these
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Crash reports
+sysinfo.txt
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# IDEs
+.idea/
+.vs/
+*.sln
+*.csproj
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Purchased assets — reinstall from Asset Store, don't commit
+Assets/ThirdParty/Synty/
