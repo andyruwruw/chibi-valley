@@ -33,4 +33,9 @@ sysinfo.txt
 Thumbs.db
 
 # Purchased assets — reinstall from Asset Store, don't commit
-Assets/ThirdParty/Synty/
+Assets/ThirdParty/*
+Assets/Plugins/*
+Assets/FlatKit/
+Assets/FlatKit.meta
+Assets/ProPixelizer/
+Assets/ProPixelizer.meta
